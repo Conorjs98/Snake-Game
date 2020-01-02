@@ -1,7 +1,7 @@
-'''
+"""
 The game snake in python
 Author: Conor Stripling
-'''
+"""
 
 import pygame
 import random
@@ -16,18 +16,7 @@ class Cube:
         self.color = pygame.color.Color("blue")
 
     def setColor(self, color):
-        # color is a string
         self.color = pygame.color.Color(color)
-
-    def moveCube(self, direction):
-        if direction == "UP":
-            self.top -= 10
-        elif direction == "DOWN":
-            self.top += 10
-        elif direction == "LEFT":
-            self.left -= 10
-        elif direction == "RIGHT":
-            self.left += 10
 
 
 class FoodCube(Cube):
@@ -112,13 +101,20 @@ class Game:
             return True
         return False
 
+    def generateScore(self, score):
+        score_font = pygame.font.SysFont("comicsansms", 20)
+        value = score_font.render("Your Score: {0}".format(str(score)), True, (
+            pygame.color.Color("yellow").r, pygame.color.Color("yellow").g, pygame.color.Color("yellow").b))
+        self.dis.blit(value, [0, 0])
+
     def runGame(self):
         if self.dis is None:
             self.createDisplay()
         s = Snake()
         self.drawSnake(s)
+        score = 0
+        self.generateScore(score)
         pygame.display.update()
-
         while not self.game_over:
             for event in pygame.event.get():
                 print(event)
@@ -146,6 +142,8 @@ class Game:
             if self.onFoodBlock(s):
                 self.food = None
                 s.growSnake()
+                score += 1
+            self.generateScore(score)
             pygame.display.update()
             pygame.time.Clock().tick(15)
 
