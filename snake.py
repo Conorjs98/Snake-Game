@@ -31,8 +31,8 @@ class Square:
 class FoodSquare(Square):
     def __init__(self):
         super().__init__(0, 0)
-        self.top = random.randint(0, 20) * 10
-        self.left = random.randint(0, 20) * 10
+        self.top = random.randint(0, 20) * CUBE_DIMENSION
+        self.left = random.randint(0, 20) * CUBE_DIMENSION
         self.color = pygame.color.Color("black")
 
 
@@ -56,13 +56,13 @@ class Snake:
 
     def move(self):
         if self.direction == Direction.UP:
-            self.position["top"] -= 10
+            self.position["top"] -= CUBE_DIMENSION
         elif self.direction == Direction.DOWN:
-            self.position["top"] += 10
+            self.position["top"] += CUBE_DIMENSION
         elif self.direction == Direction.LEFT:
-            self.position["left"] -= 10
+            self.position["left"] -= CUBE_DIMENSION
         elif self.direction == Direction.RIGHT:
-            self.position["left"] += 10
+            self.position["left"] += CUBE_DIMENSION
         self.body.insert(0, Square(self.position["top"], self.position["left"]))
         self.head = self.body[0]
         self.body.pop()
