@@ -5,12 +5,21 @@ Author: Conor Stripling
 
 import pygame
 import random
+from enum import Enum
+
+CUBE_DIMENSION = 10
 
 
-class Cube:
-    def __init__(self, x, y, top, left):
-        self.x = x
-        self.y = y
+class Direction(Enum):
+    UP = 1
+    LEFT = 2
+    DOWN = 3
+    RIGHT = 4
+
+
+class Square:
+
+    def __init__(self, top, left):
         self.top = top
         self.left = left
         self.color = pygame.color.Color("blue")
@@ -19,9 +28,9 @@ class Cube:
         self.color = pygame.color.Color(color)
 
 
-class FoodCube(Cube):
-    def __init__(self, x, y):
-        super().__init__(x, y, 0, 0)
+class FoodSquare(Square):
+    def __init__(self):
+        super().__init__(0, 0)
         self.top = random.randint(0, 20) * 10
         self.left = random.randint(0, 20) * 10
         self.color = pygame.color.Color("black")
@@ -29,32 +38,32 @@ class FoodCube(Cube):
 
 class Snake:
     def __init__(self):
-        self.head = Cube(10, 10, 200, 200)
-        self.body = [self.head, Cube(10, 10, 200, 190), Cube(10, 10, 200, 180), Cube(10, 10, 200, 170),
-                     Cube(10, 10, 200, 160)]
-        self.position = [self.head.left, self.head.top]
-        self.direction = "RIGHT"
+        self.head = Square(200, 200)
+        self.body = [self.head, Square(200, 190), Square(200, 180), Square(200, 170),
+                     Square(200, 160)]
+        self.position = {"left": self.head.left, "top": self.head.top}
+        self.direction = Direction.RIGHT
 
-    def changeDirection(self, direction):
-        if direction == "RIGHT" and self.direction != "LEFT":
-            self.direction = "RIGHT"
-        elif direction == "LEFT" and self.direction != "RIGHT":
-            self.direction = "LEFT"
-        elif direction == "UP" and self.direction != "DOWN":
-            self.direction = "UP"
-        if direction == "DOWN" and self.direction != "UP":
-            self.direction = "DOWN"
+    def changeDirection(self, dir_):
+        if dir_ == Direction.RIGHT and self.direction != Direction.LEFT:
+            self.direction = Direction.RIGHT
+        elif dir_ == Direction.LEFT and self.direction != Direction.RIGHT:
+            self.direction = Direction.LEFT
+        elif dir_ == Direction.UP and self.direction != Direction.DOWN:
+            self.direction = Direction.UP
+        if dir_ == Direction.DOWN and self.direction != Direction.UP:
+            self.direction = Direction.DOWN
 
     def move(self):
-        if self.direction == "UP":
-            self.position[1] -= 10
-        elif self.direction == "DOWN":
-            self.position[1] += 10
-        elif self.direction == "LEFT":
-            self.position[0] -= 10
-        elif self.direction == "RIGHT":
-            self.position[0] += 10
-        self.body.insert(0, Cube(10, 10, self.position[1], self.position[0]))
+        if self.direction == Direction.UP:
+            self.position["top"] -= 10
+        elif self.direction == Direction.DOWN:
+            self.position["top"] += 10
+        elif self.direction == Direction.LEFT:
+            self.position["left"] -= 10
+        elif self.direction == Direction.RIGHT:
+            self.position["left"] += 10
+        self.body.insert(0, Square(self.position["top"], self.position["left"]))
         self.head = self.body[0]
         self.body.pop()
 
@@ -67,7 +76,7 @@ class Snake:
         return False
 
     def growSnake(self):
-        self.body.insert(0, Cube(10, 10, self.position[1], self.position[0]))
+        self.body.insert(0, Square(self.position["top"], self.position["left"]))
 
 
 class Game:
@@ -85,26 +94,24 @@ class Game:
 
     def drawSnake(self, snake):
         for i in snake.body:
-            pygame.draw.rect(self.dis, (i.color.r, i.color.g, i.color.b), (i.left, i.top, i.x, i.y))
+            pygame.draw.rect(self.dis, (i.color.r, i.color.g, i.color.b),
+                             (i.left, i.top, CUBE_DIMENSION, CUBE_DIMENSION))
 
     def drawCube(self, cube_object):
         pygame.draw.rect(self.dis, (cube_object.color.r, cube_object.color.g, cube_object.color.b),
-                         (cube_object.left, cube_object.top, cube_object.x, cube_object.y))
+                         (cube_object.left, cube_object.top, CUBE_DIMENSION, CUBE_DIMENSION))
 
     def hasFood(self):
-        if self.food is None:
-            return False
-        return True
+        return self.food is not None
 
     def onFoodBlock(self, snake):
-        if snake.head.top == self.food.top and snake.head.left == self.food.left:
-            return True
-        return False
+        return snake.head.top == self.food.top and snake.head.left == self.food.left
 
     def generateScore(self, score):
         score_font = pygame.font.SysFont("comicsansms", 20)
+        yellow = pygame.color.Color("yellow")
         value = score_font.render("Your Score: {0}".format(str(score)), True, (
-            pygame.color.Color("yellow").r, pygame.color.Color("yellow").g, pygame.color.Color("yellow").b))
+            yellow.r, yellow.g, yellow.b))
         self.dis.blit(value, [0, 0])
 
     def runGame(self):
@@ -120,13 +127,13 @@ class Game:
                 print(event)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        s.changeDirection("LEFT")
+                        s.changeDirection(Direction.LEFT)
                     if event.key == pygame.K_RIGHT:
-                        s.changeDirection("RIGHT")
+                        s.changeDirection(Direction.RIGHT)
                     if event.key == pygame.K_UP:
-                        s.changeDirection("UP")
+                        s.changeDirection(Direction.UP)
                     if event.key == pygame.K_DOWN:
-                        s.changeDirection("DOWN")
+                        s.changeDirection(Direction.DOWN)
                     if event.key == pygame.K_ESCAPE:
                         self.game_over = True
                 if event.type == pygame.QUIT:
@@ -137,7 +144,7 @@ class Game:
             if s.isCollision():
                 self.game_over = True
             if not self.hasFood():
-                self.food = FoodCube(10, 10)
+                self.food = FoodSquare()
             self.drawCube(self.food)
             if self.onFoodBlock(s):
                 self.food = None
